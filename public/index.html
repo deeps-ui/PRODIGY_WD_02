@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Employee Management</title>
+  <style>
+    body {
+      background: url("images/bg.jpg") no-repeat center center fixed;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      margin: 0;
+    }
+
+    h2 {
+      color: #fff;
+      text-align: center;
+    }
+
+    input, button {
+      margin: 8px 5px;
+      padding: 8px;
+    }
+
+    .form-section {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 500px;
+      margin: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    td input {
+      width: 90%;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-section">
+    <h2>Employee Management System</h2>
+
+    <input type="text" id="name" placeholder="Name">
+    <input type="text" id="position" placeholder="Position">
+    <input type="text" id="department" placeholder="Department">
+    <button onclick="addEmployee()">Add Employee</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Position</th>
+          <th>Department</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="employeeTable"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API = '/api/employees';
+
+    async function fetchEmployees() {
+      const res = await fetch(API);
+      const data = await res.json();
+      const table = document.getElementById('employeeTable');
+      table.innerHTML = '';
+
+      data.forEach(emp => {
+        table.innerHTML += `
+          <tr>
+            <td><input value="${emp.name}" onchange="editEmployee('${emp._id}', 'name', this.value)"></td>
+            <td><input value="${emp.position}" onchange="editEmployee('${emp._id}', 'position', this.value)"></td>
+            <td><input value="${emp.department}" onchange="editEmployee('${emp._id}', 'department', this.value)"></td>
+            <td><button onclick="deleteEmployee('${emp._id}')">Delete</button></td>
+          </tr>`;
+      });
+    }
+
+    async function addEmployee() {
+      const name = document.getElementById('name').value;
+      const position = document.getElementById('position').value;
+      const department = document.getElementById('department').value;
+
+      if (!name || !position || !department) return alert('Please fill all fields.');
+
+      await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, position, department })
+      });
+
+      document.getElementById('name').value = '';
+      document.getElementById('position').value = '';
+      document.getElementById('department').value = '';
+      fetchEmployees();
+    }
+
+    async function deleteEmployee(id) {
+      await fetch(`${API}/${id}`, { method: 'DELETE' });
+      fetchEmployees();
+    }
+
+    async function editEmployee(id, field, value) {
+      await fetch(`${API}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value })
+      });
+    }
+
+    fetchEmployees();
+  </script>
+
+</body>
+</html>
